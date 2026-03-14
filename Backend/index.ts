@@ -21,11 +21,16 @@ const allowedOrigins = rawOrigins
   .map((o) => o.trim())
   .filter(Boolean);
 
+const isLocalDevOrigin = (origin: string): boolean => {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+};
+
 app.use(
   cors({
     origin: (incomingOrigin, callback) => {
       // Allow requests with no Origin header (curl, Postman, server-to-server)
       if (!incomingOrigin) return callback(null, true);
+      if (isLocalDevOrigin(incomingOrigin)) return callback(null, true);
       if (allowedOrigins.includes(incomingOrigin)) return callback(null, true);
       callback(new Error(`CORS: origin '${incomingOrigin}' is not allowed`));
     },

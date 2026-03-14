@@ -8,7 +8,9 @@ import type {
   AuthFormState,
   AuthMode,
   MarksFormState,
+  ProgressPoint,
   Result,
+  SectionComparison,
   StoredUser,
   Student,
   StudentFormState,
@@ -60,12 +62,25 @@ function App() {
   const [error, setError] = useState("");
   const [studentForm, setStudentForm] = useState<StudentFormState>(EMPTY_STUDENT_FORM);
   const [marksForm, setMarksForm] = useState<MarksFormState>(EMPTY_MARKS_FORM);
+  const [progressStudentId, setProgressStudentId] = useState("");
+  const [progressData, setProgressData] = useState<ProgressPoint[]>([]);
+  const [progressLoading, setProgressLoading] = useState(false);
+  const [chartClassName, setChartClassName] = useState("");
+  const [sectionComparisonData, setSectionComparisonData] = useState<SectionComparison[]>([]);
+  const [sectionComparisonLoading, setSectionComparisonLoading] = useState(false);
 
   const totalStudents = useMemo(() => students.length, [students]);
   const totalResults = useMemo(
     () => results.filter((item) => item.total !== null).length,
     [results]
   );
+  const classOptions = useMemo(() => {
+    const classes = new Set<string>();
+    students.forEach((student) => {
+      if (student.className) classes.add(student.className);
+    });
+    return Array.from(classes).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [students]);
 
   const handleAuthModeChange = (mode: AuthMode) => {
     setAuthMode(mode);
@@ -120,6 +135,70 @@ function App() {
     if (!isAuthenticated) return;
     void refreshAll();
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (!progressStudentId && students.length > 0) {
+      setProgressStudentId(String(students[0].id));
+    }
+    if (!chartClassName && classOptions.length > 0) {
+      setChartClassName(classOptions[0]);
+    }
+  }, [isAuthenticated, progressStudentId, chartClassName, students, classOptions]);
+
+  useEffect(() => {
+    const fetchStudentProgress = async () => {
+      if (!isAuthenticated || !progressStudentId) {
+        setProgressData([]);
+        return;
+      }
+
+      setProgressLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/results/progress/${progressStudentId}`);
+        if (!response.ok) {
+          setProgressData([]);
+          return;
+        }
+        const data = await response.json();
+        setProgressData(data.progress || []);
+      } catch {
+        setProgressData([]);
+      } finally {
+        setProgressLoading(false);
+      }
+    };
+
+    void fetchStudentProgress();
+  }, [isAuthenticated, progressStudentId, results]);
+
+  useEffect(() => {
+    const fetchSectionComparison = async () => {
+      if (!isAuthenticated || !chartClassName) {
+        setSectionComparisonData([]);
+        return;
+      }
+
+      setSectionComparisonLoading(true);
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/results/comparison/sections?className=${encodeURIComponent(chartClassName)}`
+        );
+        if (!response.ok) {
+          setSectionComparisonData([]);
+          return;
+        }
+        const data = await response.json();
+        setSectionComparisonData(data.sections || []);
+      } catch {
+        setSectionComparisonData([]);
+      } finally {
+        setSectionComparisonLoading(false);
+      }
+    };
+
+    void fetchSectionComparison();
+  }, [isAuthenticated, chartClassName, results]);
 
   const handleAuthSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -288,10 +367,19 @@ function App() {
       results={results}
       studentForm={studentForm}
       marksForm={marksForm}
+      progressStudentId={progressStudentId}
+      progressData={progressData}
+      progressLoading={progressLoading}
+      chartClassName={chartClassName}
+      classOptions={classOptions}
+      sectionComparisonData={sectionComparisonData}
+      sectionComparisonLoading={sectionComparisonLoading}
       onLogout={handleLogout}
       onRefresh={() => {
         void refreshAll();
       }}
+      onProgressStudentChange={setProgressStudentId}
+      onChartClassChange={setChartClassName}
       onStudentFormChange={handleStudentFormChange}
       onMarksFormChange={handleMarksFormChange}
       onAddStudent={handleAddStudent}

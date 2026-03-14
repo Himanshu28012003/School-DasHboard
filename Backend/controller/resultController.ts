@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import type { PoolClient } from "pg";
 import { pool } from "../db/pool";
 
 const calculateGrade = (percentage: number): string => {
@@ -10,7 +11,9 @@ const calculateGrade = (percentage: number): string => {
 };
 
 export const enterMarks = async (req: Request, res: Response): Promise<void> => {
+  let client: PoolClient | null = null;
   try {
+    client = await pool.connect();
     const { studentId, maths, science, english, computer } = req.body;
 
     if (!studentId && studentId !== 0) {
@@ -28,7 +31,7 @@ export const enterMarks = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const studentCheck = await pool.query("SELECT id FROM students WHERE id = $1", [
+    const studentCheck = await client.query("SELECT id FROM students WHERE id = $1", [
       Number(studentId),
     ]);
 
@@ -41,7 +44,29 @@ export const enterMarks = async (req: Request, res: Response): Promise<void> => 
     const percentage = Number(((total / 400) * 100).toFixed(2));
     const grade = calculateGrade(percentage);
 
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    const attemptResult = await client.query(
+      `
+      SELECT COALESCE(MAX(attempt_no), 0) + 1 AS "nextAttempt"
+      FROM marks_history
+      WHERE student_id = $1;
+      `,
+      [Number(studentId)]
+    );
+
+    const attemptNo = Number(attemptResult.rows[0]?.nextAttempt ?? 1);
+
+    await client.query(
+      `
+      INSERT INTO marks_history
+      (student_id, attempt_no, maths, science, english, computer, total, percentage, grade, exam_date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());
+      `,
+      [Number(studentId), attemptNo, marks[0], marks[1], marks[2], marks[3], total, percentage, grade]
+    );
+
+    const result = await client.query(
       `
       INSERT INTO marks (student_id, maths, science, english, computer, total, percentage, grade, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
@@ -60,12 +85,28 @@ export const enterMarks = async (req: Request, res: Response): Promise<void> => 
       [Number(studentId), marks[0], marks[1], marks[2], marks[3], total, percentage, grade]
     );
 
+    await client.query("COMMIT");
+
     res.status(200).json({
       message: "Marks saved and result calculated successfully",
-      result: result.rows[0],
+      result: {
+        ...result.rows[0],
+        attemptNo,
+      },
     });
   } catch (error: any) {
+    if (client) {
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // ignore rollback errors when transaction was not started
+      }
+    }
     res.status(500).json({ message: "Failed to save marks", error: error.message });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 };
 
@@ -238,5 +279,113 @@ export const getAllResults = async (_req: Request, res: Response): Promise<void>
     res.status(200).json({ results });
   } catch (error: any) {
     res.status(500).json({ message: "Failed to fetch results", error: error.message });
+  }
+};
+
+export const getStudentProgress = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { studentId } = req.params;
+    const id = Number(studentId);
+
+    if (Number.isNaN(id)) {
+      res.status(400).json({ message: "Invalid studentId" });
+      return;
+    }
+
+    const studentResult = await pool.query(
+      `
+      SELECT id, name, roll_number AS "rollNumber", class AS "className", section
+      FROM students
+      WHERE id = $1;
+      `,
+      [id]
+    );
+
+    if (studentResult.rowCount === 0) {
+      res.status(404).json({ message: "Student not found" });
+      return;
+    }
+
+    const progressResult = await pool.query(
+      `
+      SELECT
+        attempt_no AS "attemptNo",
+        maths,
+        science,
+        english,
+        computer,
+        total,
+        percentage,
+        grade,
+        exam_date AS "examDate"
+      FROM marks_history
+      WHERE student_id = $1
+      ORDER BY attempt_no ASC;
+      `,
+      [id]
+    );
+
+    const progress = progressResult.rows.map((row) => ({
+      attemptNo: Number(row.attemptNo),
+      maths: Number(row.maths),
+      science: Number(row.science),
+      english: Number(row.english),
+      computer: Number(row.computer),
+      total: Number(row.total),
+      percentage: Number(row.percentage),
+      grade: row.grade,
+      examDate: row.examDate,
+    }));
+
+    res.status(200).json({
+      student: studentResult.rows[0],
+      progress,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: "Failed to fetch student progress", error: error.message });
+  }
+};
+
+export const getClassSectionComparison = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { className } = req.query;
+    const classFilter = String(className || "").trim();
+
+    if (!classFilter) {
+      res.status(400).json({ message: "className query is required" });
+      return;
+    }
+
+    const comparisonResult = await pool.query(
+      `
+      SELECT
+        s.section,
+        COUNT(*)::int AS "studentCount",
+        ROUND(AVG(m.percentage), 2) AS "averagePercentage",
+        MAX(m.percentage) AS "highestPercentage",
+        MIN(m.percentage) AS "lowestPercentage"
+      FROM students s
+      JOIN marks m ON m.student_id = s.id
+      WHERE s.class = $1
+      GROUP BY s.section
+      ORDER BY s.section;
+      `,
+      [classFilter]
+    );
+
+    const sections = comparisonResult.rows.map((row) => ({
+      section: row.section,
+      studentCount: Number(row.studentCount),
+      averagePercentage: Number(row.averagePercentage),
+      highestPercentage: Number(row.highestPercentage),
+      lowestPercentage: Number(row.lowestPercentage),
+    }));
+
+    res.status(200).json({
+      className: classFilter,
+      sections,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: "Failed to fetch class section comparison", error: error.message });
   }
 };

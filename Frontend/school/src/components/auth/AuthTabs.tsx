@@ -7,12 +7,14 @@ type AuthTabsProps = {
 
 function AuthTabs({ authMode, onChange }: AuthTabsProps) {
   return (
-    <div className="mb-6 flex rounded-xl bg-slate-100 p-1">
+    <div className="mb-8 flex rounded-2xl border border-slate-200 bg-slate-50 p-1.5">
       <button
         type="button"
         onClick={() => onChange("login")}
-        className={`w-1/2 rounded-lg px-4 py-2 text-sm font-medium transition ${
-          authMode === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+        className={`w-1/2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+          authMode === "login"
+            ? "bg-white text-indigo-700 shadow-sm"
+            : "text-slate-500 hover:text-slate-700"
         }`}
       >
         Login
@@ -20,8 +22,10 @@ function AuthTabs({ authMode, onChange }: AuthTabsProps) {
       <button
         type="button"
         onClick={() => onChange("signup")}
-        className={`w-1/2 rounded-lg px-4 py-2 text-sm font-medium transition ${
-          authMode === "signup" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+        className={`w-1/2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+          authMode === "signup"
+            ? "bg-white text-indigo-700 shadow-sm"
+            : "text-slate-500 hover:text-slate-700"
         }`}
       >
         Sign Up

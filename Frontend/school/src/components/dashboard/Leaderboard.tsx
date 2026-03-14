@@ -115,19 +115,21 @@ function Leaderboard({ results }: LeaderboardProps) {
   };
 
   return (
-    <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-      {/* Header */}
+    <section className="mt-8 rounded-3xl border border-white/70 bg-white/80 p-6 shadow-xl shadow-slate-200 backdrop-blur sm:p-7">
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-slate-800">Leaderboard</h2>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Leaderboard</h2>
+          <p className="mt-1 text-sm text-slate-500">Track top performers by class and section.</p>
+        </div>
 
         {/* Mode toggle */}
-        <div className="flex overflow-hidden rounded-xl border border-slate-200 text-sm font-medium">
+        <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium">
           <button
             type="button"
             onClick={() => { setMode("class"); setSelectedSection("all"); }}
             className={`px-4 py-2 transition-colors ${
               mode === "class"
-                ? "bg-indigo-600 text-white"
+                ? "bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-sm"
                 : "bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
@@ -138,7 +140,7 @@ function Leaderboard({ results }: LeaderboardProps) {
             onClick={() => setMode("section")}
             className={`px-4 py-2 transition-colors ${
               mode === "section"
-                ? "bg-indigo-600 text-white"
+                ? "bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-sm"
                 : "bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
@@ -164,7 +166,7 @@ function Leaderboard({ results }: LeaderboardProps) {
           <select
             value={selectedSection}
             onChange={(e) => setSelectedSection(e.target.value)}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
           >
             <option value="all">All Sections</option>
             {sectionOptions.map((s) => (
@@ -180,7 +182,7 @@ function Leaderboard({ results }: LeaderboardProps) {
       ) : (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           {groups.map(({ label, entries }) => (
-            <div key={label} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <div key={label} className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4">
               {/* Group header */}
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-widest text-slate-500">
                 {label}

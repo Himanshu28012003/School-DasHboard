@@ -56,3 +56,23 @@ export type AuthFormState = {
   password: string;
   confirmPassword: string;
 };
+
+export type ProgressPoint = {
+  attemptNo: number;
+  maths: number;
+  science: number;
+  english: number;
+  computer: number;
+  total: number;
+  percentage: number;
+  grade: string;
+  examDate: string;
+};
+
+export type SectionComparison = {
+  section: string;
+  studentCount: number;
+  averagePercentage: number;
+  highestPercentage: number;
+  lowestPercentage: number;
+};

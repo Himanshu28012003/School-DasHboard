@@ -36,7 +36,7 @@ function DownloadButton({ studentId, name }: { studentId: number; name: string }
       onClick={handleDownload}
       disabled={busy}
       title="Download Result Card PDF"
-      className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100 disabled:opacity-50"
     >
       {busy ? (
         <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -88,9 +88,12 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
   }, [results, selectedClass, selectedSection]);
 
   return (
-    <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <h2 className="text-lg font-semibold">Result Cards</h2>
+    <section className="mt-8 overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-6 shadow-xl shadow-slate-200 backdrop-blur sm:p-7">
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Result Cards</h2>
+          <p className="mt-1 text-sm text-slate-500">Filter by class and section to analyze performance quickly.</p>
+        </div>
         <div className="flex flex-col gap-3 sm:flex-row">
           <select
             value={selectedClass}
@@ -98,7 +101,7 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
               setSelectedClass(event.target.value);
               setSelectedSection("all");
             }}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
           >
             <option value="all">All Classes</option>
             {classOptions.map((className) => (
@@ -111,7 +114,7 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
           <select
             value={selectedSection}
             onChange={(event) => setSelectedSection(event.target.value)}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
           >
             <option value="all">All Sections</option>
             {sectionOptions.map((section) => (
@@ -124,7 +127,7 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
           <button
             type="button"
             onClick={onRefresh}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-100"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Refresh
           </button>
@@ -136,9 +139,9 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
       ) : filteredResults.length === 0 ? (
         <p className="text-slate-500">No students available yet.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200">
           <table className="min-w-full text-left text-sm">
-            <thead>
+            <thead className="bg-slate-50/90">
               <tr className="border-b border-slate-200 text-slate-600">
                 <th className="px-3 py-2">Rank</th>
                 <th className="px-3 py-2">Name</th>
@@ -171,7 +174,7 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
                     ? "bg-orange-100 text-orange-700 font-bold"
                     : "text-slate-500";
                 return (
-                <tr key={result.id} className="border-b border-slate-100">
+                <tr key={result.id} className="border-b border-slate-100 bg-white/80 transition hover:bg-indigo-50/40">
                   <td className="px-3 py-3">
                     {displayRank !== null ? (
                       <span className={`inline-flex items-center justify-center rounded-full w-7 h-7 text-xs ${medalClass}`}>
@@ -193,7 +196,7 @@ function ResultsTable({ loading, results, onRefresh }: ResultsTableProps) {
                   <td className="px-3 py-3">{result.percentage !== null ? `${result.percentage}%` : "-"}</td>
                   <td className="px-3 py-3">
                     {result.grade ? (
-                      <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold">
+                      <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700">
                         {result.grade}
                       </span>
                     ) : (
