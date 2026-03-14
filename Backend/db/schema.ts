@@ -2,6 +2,17 @@ import { pool } from "./pool";
 
 export const initializeDatabase = async (): Promise<void> => {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS admins (
+      id SERIAL PRIMARY KEY,
+      full_name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS students (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
