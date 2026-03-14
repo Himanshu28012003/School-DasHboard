@@ -45,6 +45,16 @@ function LoginPage({ authMode, form, message, error, onModeChange, onFormChange,
         >
           Login
         </button>
+        <p className="text-center text-sm text-slate-500">
+          Not registered?{" "}
+          <button
+            type="button"
+            onClick={() => onModeChange("signup")}
+            className="font-semibold text-indigo-600 transition hover:text-sky-600"
+          >
+            Register
+          </button>
+        </p>
       </form>
     </AuthShell>
   );

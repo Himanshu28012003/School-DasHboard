@@ -61,6 +61,16 @@ function SignupPage({ authMode, form, message, error, onModeChange, onFormChange
         >
           Create Account
         </button>
+        <p className="text-center text-sm text-slate-500">
+          Already registered?{" "}
+          <button
+            type="button"
+            onClick={() => onModeChange("login")}
+            className="font-semibold text-indigo-600 transition hover:text-sky-600"
+          >
+            Login
+          </button>
+        </p>
       </form>
     </AuthShell>
   );
