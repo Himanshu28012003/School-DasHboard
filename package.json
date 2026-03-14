@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/cors": "^2.8.19",
+    "@types/pg": "^8.18.0",
+    "cors": "^2.8.6",
+    "pg": "^8.20.0",
+    "tailwindcss": "^4.2.1"
+  }
+}

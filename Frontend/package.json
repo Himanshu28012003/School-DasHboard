@@ -1,0 +1,9 @@
+{
+  "name": "frontend-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix school run dev",
+    "build": "npm --prefix school run build",
+    "preview": "npm --prefix school run preview"
+  }
+}
