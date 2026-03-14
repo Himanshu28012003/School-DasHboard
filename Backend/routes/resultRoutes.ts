@@ -7,10 +7,11 @@ import {
 	getStudentProgress,
 } from "../controller/resultController";
 import { downloadResultPDF } from "../controller/pdfController";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 const router = Router();
 
-router.post("/marks", enterMarks);
+router.post("/marks", authMiddleware, enterMarks);
 router.get("/", getAllResults);
 router.get("/progress/:studentId", getStudentProgress);
 router.get("/comparison/sections", getClassSectionComparison);
