@@ -15,7 +15,7 @@ const PORT = Number(process.env.PORT || 5000);
 // Allowed origins loaded from ALLOWED_ORIGINS env var (comma-separated).
 // Falls back to localhost Vite dev ports so the API works out of the box.
 const rawOrigins =
-  process.env.ALLOWED_ORIGINS ?? "http://localhost:5173,http://localhost:5174";
+  process.env.ALLOWED_ORIGINS ?? "https://school-das-hboard.vercel.app,http://localhost:5173,http://localhost:5174";
 const allowedOrigins = rawOrigins
   .split(",")
   .map((o) => o.trim())
