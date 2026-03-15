@@ -16,7 +16,7 @@ const PORT = Number(process.env.PORT || 5000);
 // Allowed origins loaded from ALLOWED_ORIGINS env var (comma-separated).
 // Falls back to localhost Vite dev ports so the API works out of the box.
 const rawOrigins =
-  process.env.ALLOWED_ORIGINS ?? "https://school-das-hboard.vercel.app,http://localhost:5173,http://localhost:5174";
+  process.env.ALLOWED_ORIGINS ?? "https://school-dashboard-r4rh.onrender.com,https://school-das-hboard.vercel.app,http://localhost:5173,http://localhost:5174";
 const allowedOrigins = rawOrigins
   .split(",")
   .map((o) => o.trim())
@@ -26,12 +26,22 @@ const isLocalDevOrigin = (origin: string): boolean => {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
 };
 
+const isVercelPreviewOrigin = (origin: string): boolean => {
+  try {
+    const hostname = new URL(origin).hostname.toLowerCase();
+    return hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+};
+
 app.use(
   cors({
     origin: (incomingOrigin, callback) => {
       // Allow requests with no Origin header (curl, Postman, server-to-server)
       if (!incomingOrigin) return callback(null, true);
       if (isLocalDevOrigin(incomingOrigin)) return callback(null, true);
+      if (isVercelPreviewOrigin(incomingOrigin)) return callback(null, true);
       if (allowedOrigins.includes(incomingOrigin)) return callback(null, true);
       callback(new Error(`CORS: origin '${incomingOrigin}' is not allowed`));
     },
