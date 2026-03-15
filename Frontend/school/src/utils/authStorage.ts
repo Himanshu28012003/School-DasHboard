@@ -1,4 +1,4 @@
-import { AUTH_CURRENT_USER_KEY, AUTH_USERS_KEY } from "../constants";
+import { AUTH_CURRENT_USER_KEY, AUTH_TOKEN_KEY, AUTH_USERS_KEY } from "../constants";
 import type { StoredUser } from "../types";
 
 export const getStoredUsers = (): StoredUser[] => {
@@ -25,4 +25,14 @@ export const setCurrentUser = (fullName: string): void => {
 
 export const clearCurrentUser = (): void => {
   localStorage.removeItem(AUTH_CURRENT_USER_KEY);
+};
+
+export const getAuthToken = (): string => localStorage.getItem(AUTH_TOKEN_KEY) || "";
+
+export const setAuthToken = (token: string): void => {
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
+};
+
+export const clearAuthToken = (): void => {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
 };

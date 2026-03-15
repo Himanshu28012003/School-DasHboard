@@ -11,16 +11,16 @@ import type {
   ProgressPoint,
   Result,
   SectionComparison,
-  StoredUser,
   Student,
   StudentFormState,
 } from "./types";
 import {
   clearCurrentUser,
+  clearAuthToken,
   getCurrentUser,
-  getStoredUsers,
-  saveStoredUsers,
+  getAuthToken,
   setCurrentUser,
+  setAuthToken,
 } from "./utils/authStorage";
 
 const EMPTY_AUTH_FORM: AuthFormState = {
@@ -200,7 +200,7 @@ function App() {
     void fetchSectionComparison();
   }, [isAuthenticated, chartClassName, results]);
 
-  const handleAuthSubmit = (event: FormEvent) => {
+  const handleAuthSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setAuthError("");
     setAuthMessage("");
@@ -213,11 +213,8 @@ function App() {
       return;
     }
 
-    const users = getStoredUsers();
-
     if (authMode === "signup") {
       const fullName = authForm.fullName.trim();
-
       if (!fullName) {
         setAuthError("Full name is required");
         return;
@@ -230,35 +227,53 @@ function App() {
         setAuthError("Passwords do not match");
         return;
       }
-      if (users.some((user) => user.email === email)) {
-        setAuthError("This email is already registered");
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullName, email, password }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setAuthError(data.message || "Signup failed");
+          return;
+        }
+        setAuthToken(data.token);
+        setCurrentUser(data.fullName);
+        setLoggedInUser(data.fullName);
+        setIsAuthenticated(true);
+        setAuthMessage(data.message || "Account created successfully");
+      } catch {
+        setAuthError("Could not connect to server. Please try again.");
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setAuthError(data.message || "Login failed");
         return;
       }
-
-      const newUser: StoredUser = { fullName, email, password };
-      saveStoredUsers([...users, newUser]);
-      setCurrentUser(fullName);
-      setLoggedInUser(fullName);
+      setAuthToken(data.token);
+      setCurrentUser(data.fullName);
+      setLoggedInUser(data.fullName);
       setIsAuthenticated(true);
-      setAuthMessage("Account created successfully");
-      return;
+      setAuthMessage(data.message || "Login successful");
+    } catch {
+      setAuthError("Could not connect to server. Please try again.");
     }
-
-    const user = users.find((item) => item.email === email && item.password === password);
-
-    if (!user) {
-      setAuthError("Invalid email or password");
-      return;
-    }
-
-    setCurrentUser(user.fullName);
-    setLoggedInUser(user.fullName);
-    setIsAuthenticated(true);
-    setAuthMessage("Login successful");
   };
 
   const handleLogout = () => {
     clearCurrentUser();
+    clearAuthToken();
     setIsAuthenticated(false);
     setLoggedInUser("");
     setAuthForm(EMPTY_AUTH_FORM);
@@ -274,7 +289,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/students`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAuthToken()}` },
         body: JSON.stringify({
           name: studentForm.name,
           rollNumber: Number(studentForm.rollNumber),
@@ -304,7 +319,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE_URL}/results/marks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getAuthToken()}` },
         body: JSON.stringify({
           studentId: Number(marksForm.studentId),
           maths: Number(marksForm.maths),
