@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import studentRoutes from "./routes/studentRoutes";
 import resultRoutes from "./routes/resultRoutes";
+import authRoutes from "./routes/authRoutes";
 import { initializeDatabase } from "./db/schema";
 import { getDatabaseTarget, testDatabaseConnection } from "./db/pool";
 
@@ -47,6 +48,7 @@ app.get("/", (_req, res) => {
 	res.status(200).json({ message: "Student Result API is running" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/results", resultRoutes);
 
